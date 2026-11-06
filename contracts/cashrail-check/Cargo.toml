@@ -1,0 +1,13 @@
+[package]
+name = "cashrail-check"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+publish = false
+description = "V-16: sandbox check that the near/intents Verifier (defuse v0.4.5, built from source) initializes and carries the Tradelock cash-leg flow. Test-only crate."
+
+[dev-dependencies]
+near-workspaces = { version = "=0.24.0", default-features = false, features = ["install"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+anyhow = "1"
+serde_json.workspace = true
