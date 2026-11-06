@@ -1,0 +1,28 @@
+{
+  "name": "tradelock",
+  "private": true,
+  "packageManager": "pnpm@11.24.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "test": "pnpm -r --if-present test",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "gen:vectors": "pnpm --filter @tradelock/shared gen:vectors",
+    "contracts:build": "scripts/build-contracts.sh",
+    "contracts:test": "cd contracts && cargo test -j 2 -- --test-threads=1",
+    "t1:derive": "pnpm --filter @tradelock/scripts t1:derive",
+    "t1:prepare": "pnpm --filter @tradelock/scripts t1:prepare",
+    "t1:broadcast": "pnpm --filter @tradelock/scripts t1:broadcast",
+    "evm:deploy-registry": "pnpm --filter @tradelock/evm deploy-registry",
+    "evm:mint": "pnpm --filter @tradelock/evm mint",
+    "evm:hand-over": "pnpm --filter @tradelock/evm hand-over",
+    "demo": "pnpm --filter @tradelock/scripts demo"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2",
+    "vitest": "5.1.0"
+  }
+}

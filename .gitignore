@@ -1,0 +1,15 @@
+node_modules/
+.env
+.env.*
+!.env.example
+target/
+dist/
+*.wasm
+!contracts/**/res/*.wasm
+.DS_Store
+evm/.cache/
+contracts/.external/
+.next/
+web/next-env.d.ts
+docs/demo-runs/*.tmp
+*.tsbuildinfo
