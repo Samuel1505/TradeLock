@@ -1,0 +1,26 @@
+{
+  "flow": "escrow",
+  "contract": "tradelock.samuelowen.testnet",
+  "deal": "2",
+  "state": "Settled",
+  "title_escrow": null,
+  "links": [
+    {
+      "step": "create_deal (escrow) as buyer — expected deal id 2",
+      "url": "https://testnet.nearblocks.io/txns/7uQXkyHceNRMKosguhtdTdaDd2RcnrPWo2q5Hhbi1YDj"
+    },
+    {
+      "step": "supplier accepts the deal",
+      "url": "https://testnet.nearblocks.io/txns/8kZ1w22DLnmTZDxqQbyy4c1DxFL7boBBHYMuhp7JQ6Lc"
+    },
+    {
+      "step": "buyer funds deal 2 (Verifier mt_transfer_call → tradelock.mt_on_transfer)",
+      "url": "https://testnet.nearblocks.io/txns/7M8qiFFmLyn7RuonNUUDWZzkx7B46SUxeRGfdMb37coc"
+    },
+    {
+      "step": "buyer confirms delivery (escrow-only)",
+      "url": "https://testnet.nearblocks.io/txns/q9u62g7y2A4ea5bicD2mmxTfmtT9kfJxdJaC6xWrFsi"
+    }
+  ],
+  "at": "2026-11-06T23:04:47.028Z"
+}

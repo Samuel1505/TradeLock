@@ -1,0 +1,66 @@
+{
+  "flow": "settle",
+  "contract": "tradelock.samuelowen.testnet",
+  "deal": "0",
+  "state": "Settled",
+  "title_escrow": "0x15149d3f55801f7a112a595520de234d8821da76",
+  "links": [
+    {
+      "step": "create_deal (settle) as buyer — expected deal id 0",
+      "url": "https://testnet.nearblocks.io/txns/75fS9VX8Txjjo18WiWZoxgi9GY5RMBUMfJfGEbZ5Shum"
+    },
+    {
+      "step": "supplier accepts the deal",
+      "url": "https://testnet.nearblocks.io/txns/S85eXTZtwyGc2givLLrhDCtHeQn56NXRA561dgpsNYd"
+    },
+    {
+      "step": "top up buyer with 1000000 tUSD base units (token owner → buyer)",
+      "url": "https://testnet.nearblocks.io/txns/6o6j1pkWkpAJLX9QLCPu9bjANTBpJbie3KstdTVQEuTH"
+    },
+    {
+      "step": "buyer deposits tUSD into its own Verifier balance (ft_transfer_call, msg = \"\")",
+      "url": "https://testnet.nearblocks.io/txns/7B38KvV1Ay52knzFHBWwkZAJGyUvutkxSpgkNqepozvZ"
+    },
+    {
+      "step": "buyer funds deal 0 (Verifier mt_transfer_call → tradelock.mt_on_transfer)",
+      "url": "https://testnet.nearblocks.io/txns/Ct1G92BNNxF4mSea23go6UFrDaMqbdEQqLNVorj7koKo"
+    },
+    {
+      "step": "mint eBL",
+      "url": "https://sepolia.etherscan.io/tx/0x7c8c444444267ebf31e85e93d4d7dace95de2303f3f701500f0f14ef770d2f0e"
+    },
+    {
+      "step": "hand-over to deal address",
+      "url": "https://sepolia.etherscan.io/tx/0x10c055480a95a05dc8e78b5b916ac82faa310279cc23f282ba4b7519b6a0c1d1"
+    },
+    {
+      "step": "buyer confirms title held (checked on Sepolia)",
+      "url": "https://testnet.nearblocks.io/txns/9q66Ye75XXLPabLNLnV3FRBzcsWC98E73T8vJCdxjStk"
+    },
+    {
+      "step": "buyer accepts the documents (pay against title, D-020)",
+      "url": "https://testnet.nearblocks.io/txns/5FxqswApG284GyQusQUGxC1gxwrUez2b5XV7apBBDWo4"
+    },
+    {
+      "step": "deal address gas top-up",
+      "url": "https://sepolia.etherscan.io/tx/0x31b26c2264b53587ffd606bfd5f24c7d05a00fc790bd93cdd535d1564fbe5e41"
+    },
+    {
+      "step": "request MPC signature: transferOwners(0x6a7d2cF926879f23692ab6058258D1Eb7c3E46ed) from 0xdDa5844e9C176a551DF9A6FE10cd184d3FedcA4c, nonce 0",
+      "url": "https://testnet.nearblocks.io/txns/DZFWBvA2zQAfdZUZXKGMjPSdbQGAUMfGR67nVUcBi9LR"
+    },
+    {
+      "step": "title transfer (sent)",
+      "url": "https://sepolia.etherscan.io/tx/0x5ad29edf7e351452e394a8cba8e3f67f03f3fe445650ff0fda8ef9804f58fb09"
+    },
+    {
+      "step": "report_broadcast (informational)",
+      "url": "https://testnet.nearblocks.io/txns/H48wonRqtYVxiiraj9QZqLUnyFCt3NYpMBNKeUG4hteg"
+    },
+    {
+      "step": "buyer confirms the title arrived (checked on Sepolia)",
+      "url": "https://testnet.nearblocks.io/txns/H4xqmpShrUq63r9dkp1DfF2ip6ENE7woUzohRhiCFQau"
+    }
+  ],
+  "at": "2026-11-06T22:32:30.692Z"
+}
