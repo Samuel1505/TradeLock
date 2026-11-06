@@ -1,0 +1,21 @@
+{
+  "name": "@tradelock/evm",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "deploy-registry": "tsx scripts/deploy-registry.ts",
+    "mint": "tsx scripts/mint.ts",
+    "hand-over": "tsx scripts/hand-over.ts",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@tradelock/shared": "workspace:*",
+    "viem": "2.57.16"
+  },
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}
