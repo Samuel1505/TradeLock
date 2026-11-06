@@ -1,0 +1,20 @@
+{
+  "name": "@tradelock/scripts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "t1:derive": "tsx t1/derive.ts",
+    "t1:prepare": "tsx t1/prepare.ts",
+    "t1:broadcast": "tsx t1/broadcast.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "demo": "tsx demo/run.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@tradelock/evm": "workspace:*",
+    "@tradelock/shared": "workspace:*",
+    "viem": "2.57.16"
+  },
+  "devDependencies": {}
+}
