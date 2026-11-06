@@ -1,0 +1,7 @@
+{
+  "name": "@tradelock/agent",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cut (D-019, S-10). Placeholder only; executor logic lives in scripts/."
+}
