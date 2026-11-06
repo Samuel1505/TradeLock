@@ -5,8 +5,10 @@
 
 /**
  * settle: buyer accepts documents. refund: buyer refuses. escrow: escrow-only, buyer confirms delivery.
- * dispute: title held, buyer goes silent; supplier disputes, supplier + arbiter vote Release (2-of-3), and
- * supplier + arbiter confirm the title reached the buyer (D-019 two-party confirmation).
+ * dispute: title held; the buyer disputes ("documents don't match order"). Votes: buyer Refund, supplier Release,
+ * arbiter Release → 2-of-3 Release → Settling. The buyer does not confirm receipt, so supplier + arbiter confirm
+ * the title reached the buyer (D-019 two-party path). (A merely silent buyer needs no dispute: release after
+ * accept_by, D-020.)
  */
 export type Flow = 'settle' | 'refund' | 'escrow' | 'dispute';
 export type Party = 'buyer' | 'supplier' | 'arbiter';
@@ -62,7 +64,7 @@ export type Step =
   | { kind: 'resume_cash' }
   | { kind: 'request_signature' }
   | { kind: 'broadcast' }
-  | { kind: 'dispute' }
+  | { kind: 'dispute'; by: Party }
   | { kind: 'vote'; by: Party; decision: 'Release' | 'Refund' }
   | { kind: 'confirm_title_transferred'; by: Party }
   | { kind: 'done' }
@@ -77,7 +79,8 @@ export function nextStep(deal: DealView, flow: Flow, sepolia: SepoliaFacts | nul
       return { kind: 'stuck', reason: 'deal was cancelled' };
     case 'Disputed': {
       if (flow !== 'dispute') return { kind: 'stuck', reason: 'deal is disputed; parties must vote (use the dispute flow)' };
-      // Buyer is silent: supplier + arbiter reach 2-of-3 Release.
+      // Scripted disagreement: buyer Refund, supplier Release, then the arbiter breaks the tie with Release.
+      if (deal.votes.buyer !== 'Refund') return { kind: 'vote', by: 'buyer', decision: 'Refund' };
       if (deal.votes.supplier !== 'Release') return { kind: 'vote', by: 'supplier', decision: 'Release' };
       if (deal.votes.arbiter !== 'Release') return { kind: 'vote', by: 'arbiter', decision: 'Release' };
       return { kind: 'wait', reason: 'threshold reached; settlement starting' };
@@ -99,7 +102,7 @@ export function nextStep(deal: DealView, flow: Flow, sepolia: SepoliaFacts | nul
     }
     case 'TitleHeld':
       if (flow === 'refund') return { kind: 'refuse_documents' };
-      if (flow === 'dispute') return deal.disputed ? { kind: 'wait', reason: 'dispute recorded' } : { kind: 'dispute' };
+      if (flow === 'dispute') return deal.disputed ? { kind: 'wait', reason: 'dispute recorded' } : { kind: 'dispute', by: 'buyer' };
       return { kind: 'accept_documents' };
     case 'Settling':
     case 'Refunding': {
@@ -115,7 +118,7 @@ export function nextStep(deal: DealView, flow: Flow, sepolia: SepoliaFacts | nul
       const dest = deal.state === 'Settling' ? ebl.buyer_evm : ebl.supplier_evm;
       if (eq(sepolia.holder, dest) && eq(sepolia.beneficiary, dest)) {
         if (flow === 'dispute' && deal.state === 'Settling') {
-          // Silent buyer: the other two confirm together (D-019).
+          // The buyer (who disputed) does not confirm receipt: the other two confirm together (D-019).
           return { kind: 'confirm_title_transferred', by: deal.pending_confirmers.includes('Supplier') ? 'arbiter' : 'supplier' };
         }
         return { kind: 'confirm_title_transferred', by: deal.state === 'Settling' ? 'buyer' : 'supplier' };

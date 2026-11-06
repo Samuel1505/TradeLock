@@ -4,8 +4,9 @@
  *   pnpm demo settle [--deal N] [--yes]     eBL: documents accepted → Settled
  *   pnpm demo refund [--deal N] [--yes]     eBL: documents refused → Refunded
  *   pnpm demo escrow [--deal N] [--yes]     escrow-only: delivery confirmed, ft_withdraw payout → Settled
- *   pnpm demo dispute [--deal N] [--yes]    eBL: buyer silent; supplier disputes, supplier + arbiter vote Release
- *                                           (2-of-3), supplier + arbiter confirm title receipt (D-019) → Settled
+ *   pnpm demo dispute [--deal N] [--yes]    eBL: buyer disputes ("documents don't match order"); votes buyer Refund,
+ *                                           supplier Release, arbiter Release → 2-of-3 Release; supplier + arbiter
+ *                                           confirm title receipt (D-019) → Settled
  *
  * Without --yes or --step it prints the next command and stops (nothing is sent). With --yes it runs steps until
  * the deal is terminal. With --step it sends exactly one state-changing step, then prints the next and stops
@@ -248,12 +249,15 @@ async function execute(step: Step, deal: DealView): Promise<void> {
       await nearCall('report_broadcast (informational)', { signer: env.DEMO_EXECUTOR, contract: C, method: 'report_broadcast', args: { deal_id: id, tx_hash: hash }, gasTgas: 30, deposit: '0 NEAR' });
       return;
     }
-    case 'dispute':
-      await nearCall('supplier opens a dispute (buyer silent after the documents were presented)', {
-        signer: env.DEMO_SUPPLIER, contract: C, method: 'dispute',
-        args: { deal_id: id, reason_hash: keccak256(toHex(`SAMPLE dispute — buyer silent — deal ${id}`)).slice(2) }, gasTgas: 30, deposit: '0 NEAR',
+    case 'dispute': {
+      const signer = { buyer: env.DEMO_BUYER, supplier: env.DEMO_SUPPLIER, arbiter: env.DEMO_ARBITER }[step.by];
+      // Synthetic reason (S-04): only its hash goes on-chain.
+      const reason = "documents don't match order";
+      await nearCall(`${step.by} opens a dispute: "${reason}" (hash only on-chain)`, {
+        signer, contract: C, method: 'dispute', args: { deal_id: id, reason_hash: keccak256(toHex(reason)).slice(2) }, gasTgas: 30, deposit: '0 NEAR',
       });
       return;
+    }
     case 'vote': {
       const signer = { buyer: env.DEMO_BUYER, supplier: env.DEMO_SUPPLIER, arbiter: env.DEMO_ARBITER }[step.by];
       await nearCall(`${step.by} votes ${step.decision} (2-of-3)`, { signer, contract: C, method: 'vote', args: { deal_id: id, decision: step.decision }, gasTgas: 150, deposit: '0 NEAR' });

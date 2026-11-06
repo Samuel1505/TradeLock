@@ -63,16 +63,21 @@ describe('nextStep', () => {
     expect(nextStep({ ...d, state: 'Disputed' }, 'escrow', null).kind).toBe('stuck');
   });
 
-  it('dispute: supplier disputes at TitleHeld, then supplier + arbiter vote Release', () => {
+  it('dispute: buyer disputes at TitleHeld; votes buyer Refund → supplier Release → arbiter Release', () => {
     const held = ebl({ state: 'TitleHeld', accepted: true });
-    expect(nextStep(held, 'dispute', at(DERIVED))).toEqual({ kind: 'dispute' });
+    expect(nextStep(held, 'dispute', at(DERIVED))).toEqual({ kind: 'dispute', by: 'buyer' });
     const d = ebl({ state: 'Disputed', accepted: true, disputed: true });
-    expect(nextStep(d, 'dispute', at(DERIVED))).toEqual({ kind: 'vote', by: 'supplier', decision: 'Release' });
-    expect(nextStep({ ...d, votes: { buyer: null, supplier: 'Release', arbiter: null } }, 'dispute', at(DERIVED))).toEqual({ kind: 'vote', by: 'arbiter', decision: 'Release' });
+    const v = (buyer: 'Release' | 'Refund' | null, supplier: 'Release' | 'Refund' | null, arbiter: 'Release' | 'Refund' | null) => ({ ...d, votes: { buyer, supplier, arbiter } });
+    expect(nextStep(v(null, null, null), 'dispute', at(DERIVED))).toEqual({ kind: 'vote', by: 'buyer', decision: 'Refund' });
+    expect(nextStep(v('Refund', null, null), 'dispute', at(DERIVED))).toEqual({ kind: 'vote', by: 'supplier', decision: 'Release' });
+    expect(nextStep(v('Refund', 'Release', null), 'dispute', at(DERIVED))).toEqual({ kind: 'vote', by: 'arbiter', decision: 'Release' });
+    // Never a second Refund vote: after buyer Refund the next votes are Release only.
+    const seq = [v(null, null, null), v('Refund', null, null), v('Refund', 'Release', null)].map((x) => nextStep(x, 'dispute', at(DERIVED)));
+    expect(seq.filter((s) => s.kind === 'vote' && s.decision === 'Refund')).toHaveLength(1);
     expect(nextStep(d, 'settle', at(DERIVED)).kind).toBe('stuck');
   });
 
-  it('dispute: silent buyer, so supplier then arbiter confirm the title reached the buyer (D-019)', () => {
+  it('dispute: buyer does not confirm receipt, so supplier then arbiter confirm (D-019)', () => {
     const s = ebl({ state: 'Settling', accepted: true, disputed: true, cash_leg: 'Done', title_leg: { status: 'Broadcast' } });
     expect(nextStep(s, 'dispute', at(BUYER))).toEqual({ kind: 'confirm_title_transferred', by: 'supplier' });
     expect(nextStep({ ...s, pending_confirmers: ['Supplier'] }, 'dispute', at(BUYER))).toEqual({ kind: 'confirm_title_transferred', by: 'arbiter' });
