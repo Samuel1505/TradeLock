@@ -1,0 +1,26 @@
+{
+  "mpc": "v1.signer-prod.testnet",
+  "rpc": "https://rpc.testnet.fastnear.com",
+  "root_key_domain_0": "secp256k1:4NfTiv3UsGahebgTaHyD9vF8KYKMBnfd6kh94mK6xv8fGBiJB8TBtFMP5WWXz6B89Ac1fbpzPwAvoyQebemHFwx3",
+  "generated": "2026-11-04",
+  "vectors": [
+    {
+      "predecessor": "tradelock.samuelowen.testnet",
+      "path": "tradelock/proof/0",
+      "derived_public_key": "secp256k1:2E6jsCdMsEk9mQAWJuCDTjGAkFhZ9FmMsdyo6kBkceeJguBKjXtXWEWQV8c47V8AmsHYfL1AqrbLoRxV4UWq6HLs",
+      "address": "0x4c1fd766f54fd266509b4a578c88ce36fed7a628"
+    },
+    {
+      "predecessor": "tradelock.samuelowen.testnet",
+      "path": "tradelock/deal/0",
+      "derived_public_key": "secp256k1:4izMZaTNnhAHNPVnv7dpEqTQxg62iz4PQv2UXT6kkfXQzsF9QENymJaEC73eiPF3Ed3eSVczg4cCE8LkSnwkBX2Z",
+      "address": "0xdda5844e9c176a551df9a6fe10cd184d3fedca4c"
+    },
+    {
+      "predecessor": "tradelock.samuelowen.testnet",
+      "path": "tradelock/deal/1",
+      "derived_public_key": "secp256k1:5Awf3LqiMcuddpa232Q1HFUswWo1cr6vq8MH5f3JfJ6orPWTFotpgjGZz4pu4CdAu5mbAuKr1r1h3Lu36yjPuU7p",
+      "address": "0xb7b78680ee1514f200dfd70175337f54e1e79f2c"
+    }
+  ]
+}
