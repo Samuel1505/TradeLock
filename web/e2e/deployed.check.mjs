@@ -1,4 +1,4 @@
-// Read-only (no wallet) E2E against the DEPLOYED testnet contracts: /deals/0 (Settled), /deals/1 (Refunded), /deals/2 (escrow-only Settled), /demo.
+// Read-only (no wallet) E2E against the DEPLOYED testnet contracts: /deals/0 (Settled), /deals/1 (Refunded), /deals/2 (escrow-only Settled), /deals/3 (disputed, settled 2-of-3), /demo.
 // Run: pnpm --filter @tradelock/web build && pnpm --filter @tradelock/web start & pnpm --filter @tradelock/web e2e:deployed
 import { chromium } from 'playwright';
 const base = process.env.BASE_URL ?? 'http://127.0.0.1:3000';
@@ -14,7 +14,13 @@ const SPECS = [
   },
   {
     id: '2', label: 'Released: supplier paid', seal: 'RELEASED', stamped: true, escrowOnly: true,
-    cash: 'Paid to supplier', title: 'No bill of lading in this deal.', timeline: 'Created|Funded|Delivered|Settled', current: 'Settled',
+    cash: 'Paid to supplier', title: 'No bill of lading in this deal.', timeline: 'Created|Funded|Delivered|Settled', current: 'Settled', confirmations: 0,
+  },
+  {
+    id: '3', label: 'Released: supplier paid, buyer owns the goods', seal: 'RELEASED', stamped: true,
+    cash: 'Paid to supplier', title: 'Transferred to buyer', holder: '0x6a7d…46ed', escrow: '0x30cf1781729f03e90ea90ec63d276f8d230a3a50',
+    timeline: 'Created|Funded|Title held|Disputed: 2-of-3 Release|Settled', current: 'Settled', confirmations: 3,
+    votes: 'Refund|Release|Release', confirmationStatus: 'yes|counted with the next confirmation|yes',
   },
 ];
 const modes = [
@@ -58,7 +64,20 @@ for (const s of SPECS) {
     const tl = (await page.locator('.timeline li').allInnerTexts()).map((t) => t.trim()).join('|');
     const cur = (await page.locator('.timeline li[aria-current="step"]').innerText()).trim();
     check(`${tag}: timeline ${s.timeline} (current ${s.current})`, tl === s.timeline && cur === s.current, `got ${tl}, current ${cur}`);
-    check(`${tag}: ${s.escrowOnly ? 0 : 2} confirmations`, (await page.locator('table.records tbody tr').count()) === (s.escrowOnly ? 0 : 2));
+    const expectedConf = s.confirmations ?? 2;
+    const confRows = page.locator('section:has(h2:text-is("Confirmations")) table.records tbody tr');
+    check(`${tag}: ${expectedConf} confirmations`, (await confRows.count()) === expectedConf);
+    if (s.confirmationStatus) {
+      const status = (await confRows.locator('td:last-child').allInnerTexts()).map((t) => t.trim()).join('|');
+      check(`${tag}: confirmation status ${s.confirmationStatus}`, status === s.confirmationStatus, status);
+    }
+    const voteCells = page.locator('section:has(h2:text-is("Dispute")) table.records tbody td');
+    if (s.votes) {
+      const votes = (await voteCells.allInnerTexts()).map((t) => t.trim()).join('|');
+      check(`${tag}: votes buyer|supplier|arbiter = ${s.votes}`, votes === s.votes, votes);
+    } else {
+      check(`${tag}: no dispute section`, (await voteCells.count()) === 0);
+    }
     if (!s.escrowOnly) check(`${tag}: TitleEscrow link`, (await page.locator(`a[href*="${s.escrow}"]`).count()) >= 1);
     await page.waitForTimeout(1500);
     check(`${tag}: wallet button ready`, (await page.locator('header.site button').last().innerText()).trim() === 'Connect NEAR wallet');
@@ -73,10 +92,10 @@ for (const s of SPECS) {
 const ctx = await browser.newContext();
 const page = await ctx.newPage();
 await page.goto(`${base}/demo`);
-await page.waitForFunction(() => document.querySelectorAll('ul.deal-list li').length === 3 && !document.body.innerText.includes('loading…'), null, { timeout: 25_000 }).catch(() => {});
+await page.waitForFunction(() => document.querySelectorAll('ul.deal-list li').length === 4 && !document.body.innerText.includes('loading…'), null, { timeout: 25_000 }).catch(() => {});
 const demoText = await page.locator('main').innerText();
 check('demo: T1 proof links (4)', (await page.locator('ol.steps li a').count()) === 4);
-check('demo: deals 0, 1, 2 listed with live state', demoText.includes('Deal 0 · Released') && demoText.includes('Deal 1 · Returned') && demoText.includes('Deal 2 · Released: supplier paid'), demoText.split('\n').filter((l) => l.startsWith('Deal')).join(' | '));
+check('demo: deals 0–3 listed with live state', demoText.includes('Deal 0 · Released') && demoText.includes('Deal 1 · Returned') && demoText.includes('Deal 2 · Released: supplier paid') && demoText.includes('Deal 3 · Released'), demoText.split('\n').filter((l) => l.startsWith('Deal')).join(' | '));
 await browser.close();
 console.log(results.join('\n'));
 const failed = results.filter((r) => r.startsWith("✗")).length;

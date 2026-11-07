@@ -202,6 +202,25 @@ export function DealPage({ id }: { id: string }) {
         </p>
       )}
 
+      {d.disputed && (
+        <section>
+          <h2>Dispute</h2>
+          <p className="muted small">Two matching votes of three decide. Only the hash of the reason is on-chain.</p>
+          <table className="records">
+            <thead>
+              <tr><th>Buyer</th><th>Supplier</th><th>Arbiter</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>{d.votes.buyer ?? 'not voted'}</td>
+                <td>{d.votes.supplier ?? 'not voted'}</td>
+                <td>{d.votes.arbiter ?? 'not voted'}</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      )}
+
       {d.confirmations.length > 0 && (
         <section>
           <h2>Confirmations</h2>
@@ -217,7 +236,7 @@ export function DealPage({ id }: { id: string }) {
                   <td>{c.party}</td>
                   <td className="mono">{short(c.evidence.holder)}</td>
                   <td className="mono">{c.evidence.block_number}</td>
-                  <td>{c.accepted ? 'yes' : 'waiting for second party'}</td>
+                  <td>{c.accepted ? 'yes' : d.confirmations.slice(i + 1).some((n) => n.fact === c.fact && n.accepted) ? 'counted with the next confirmation' : 'waiting for second party'}</td>
                 </tr>
               ))}
             </tbody>

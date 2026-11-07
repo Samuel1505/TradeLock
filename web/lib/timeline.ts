@@ -18,7 +18,7 @@ export function timeline(d: DealView): TimelineStep[] {
       return mk(['Created', 'Cancelled'], 1, 'returned');
     case 'Refunding':
     case 'Refunded': {
-      const head = ['Created', 'Funded', ...(titleWasHeld ? ['Title held'] : [])];
+      const head = ['Created', 'Funded', ...(titleWasHeld ? ['Title held'] : []), ...(d.disputed ? ['Disputed: 2-of-3 Refund'] : [])];
       const labels = [...head, d.state === 'Refunding' ? 'Returning' : 'Returned'];
       return mk(labels, labels.length - 1, 'returned');
     }
@@ -27,6 +27,11 @@ export function timeline(d: DealView): TimelineStep[] {
       return mk(labels, labels.length - 1, 'returned');
     }
     default: {
+      if (d.disputed && (d.state === 'Settling' || d.state === 'Settled')) {
+        // Settled by vote, not by accepting documents / confirming delivery.
+        const labels = ['Created', 'Funded', ...(titleWasHeld ? ['Title held'] : []), 'Disputed: 2-of-3 Release', 'Settled'];
+        return mk(labels, d.state === 'Settled' ? labels.length - 1 : labels.length - 2);
+      }
       const labels = ebl ? ['Created', 'Funded', 'Title held', 'Documents accepted', 'Settled'] : ['Created', 'Funded', 'Delivered', 'Settled'];
       const idx: Record<string, number> = ebl
         ? { Created: 0, Funded: 1, TitleHeld: 2, Settling: 3, Settled: 4 }

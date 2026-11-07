@@ -96,4 +96,11 @@ describe('timeline follows the actual path', () => {
   it('escrow-only settle', () => {
     expect(labels(deal({ state: 'Settled', mode: 'escrow_only', ebl: null }))).toEqual(['Created:done', 'Funded:done', 'Delivered:done', 'Settled:current']);
   });
+  it('dispute settled by vote shows the vote, never Documents accepted', () => {
+    const d = deal({ state: 'Settled', disputed: true, title_leg: { status: 'Done' } });
+    expect(labels(d)).toEqual(['Created:done', 'Funded:done', 'Title held:done', 'Disputed: 2-of-3 Release:done', 'Settled:current']);
+  });
+  it('dispute refunded by vote', () => {
+    expect(labels(deal({ state: 'Refunded', disputed: true, title_leg: { status: 'Done' } }))).toEqual(['Created:done', 'Funded:done', 'Title held:done', 'Disputed: 2-of-3 Refund:done', 'Returned:current']);
+  });
 });
