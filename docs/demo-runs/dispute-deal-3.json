@@ -1,0 +1,82 @@
+{
+  "flow": "dispute",
+  "contract": "tradelock.samuelowen.testnet",
+  "deal": "3",
+  "state": "Settled",
+  "title_escrow": "0x30cf1781729f03e90ea90ec63d276f8d230a3a50",
+  "links": [
+    {
+      "step": "create_deal (dispute) as buyer — expected deal id 3",
+      "url": "https://testnet.nearblocks.io/txns/2YpMDahrZhGGd1V9rb2fY7Pv9wFsSv7xyZM1tKHBavHS"
+    },
+    {
+      "step": "supplier accepts the deal",
+      "url": "https://testnet.nearblocks.io/txns/BzQ4RmGA2VL1bm3atiecRK6NM9QGVM3PXasRFrz9Mpds"
+    },
+    {
+      "step": "top up buyer with 1000000 tUSD base units (token owner → buyer)",
+      "url": "https://testnet.nearblocks.io/txns/7Z51zRMu5Qqf9tNbgZfQG6KJhvEdUroWnM54s5GMC7D9"
+    },
+    {
+      "step": "buyer deposits tUSD into its own Verifier balance (ft_transfer_call, msg = \"\")",
+      "url": "https://testnet.nearblocks.io/txns/64DBhYLzXawEYNwCshACmgBcDXdexn4nceVhNeJtGCPx"
+    },
+    {
+      "step": "buyer funds deal 3 (Verifier mt_transfer_call → tradelock.mt_on_transfer)",
+      "url": "https://testnet.nearblocks.io/txns/iG8RnGo8DK2viG8LwRwTsNrZaSpk1msnPX3obnSTwbU"
+    },
+    {
+      "step": "mint eBL",
+      "url": "https://sepolia.etherscan.io/tx/0x897a2bb76eba95b9e4ec2f526bcd14dcc6d715be882d914cfa1dd57c661de96f"
+    },
+    {
+      "step": "hand-over to deal address",
+      "url": "https://sepolia.etherscan.io/tx/0x3512f3cc884ec1195d0ee4a32cdfed8bbc1963dadb3203036e22f3d31f78973e"
+    },
+    {
+      "step": "buyer confirms title held (checked on Sepolia)",
+      "url": "https://testnet.nearblocks.io/txns/nHekFfB2UPpW1LyZRDPFpoGrn5gYW7w3YkanpsykX8A"
+    },
+    {
+      "step": "buyer opens a dispute: \"documents don't match order\" (hash only on-chain)",
+      "url": "https://testnet.nearblocks.io/txns/26u9Ec1C5myXKLAhyuishpDwXBobMVhb82ZagfAkkQcQ"
+    },
+    {
+      "step": "buyer votes Refund (2-of-3)",
+      "url": "https://testnet.nearblocks.io/txns/E4t2vFYyucMA4iUNTGGzZb1gQ6bZphm6yXcryMmRQoas"
+    },
+    {
+      "step": "supplier votes Release (2-of-3)",
+      "url": "https://testnet.nearblocks.io/txns/CXQTjEZwhVg3wmyDZSC2v4BgAVHfGkaVDXDArqHwZFYt"
+    },
+    {
+      "step": "arbiter votes Release (2-of-3)",
+      "url": "https://testnet.nearblocks.io/txns/Gsk6o7KCVR1WbKa5CEhtVHggMPFgU6pxYBK95zKR6uvc"
+    },
+    {
+      "step": "deal address gas top-up",
+      "url": "https://sepolia.etherscan.io/tx/0x6365b3edf2c840669f1d644e59f5537fe44d43c1d231e8091055f040b4479f70"
+    },
+    {
+      "step": "request MPC signature: transferOwners(0x6a7d2cF926879f23692ab6058258D1Eb7c3E46ed) from 0xf4acb96D97D92b1eF42Ec02F3D4Ed2f4FfA09ee1, nonce 0",
+      "url": "https://testnet.nearblocks.io/txns/7P2nH2smZP3Pz7Az2ghBwWaLtqfD3kha8nGys1Yacp26"
+    },
+    {
+      "step": "title transfer (sent)",
+      "url": "https://sepolia.etherscan.io/tx/0x412a20399ace6763ff4007dadc5baddf548b81796fcea0e418a1efcf97f99b3d"
+    },
+    {
+      "step": "report_broadcast (informational)",
+      "url": "https://testnet.nearblocks.io/txns/2Be8ni5zipt2rpV7fkFQs5rx7i8tXVyqeU8mBM7ttcnW"
+    },
+    {
+      "step": "supplier confirms the title arrived (checked on Sepolia)",
+      "url": "https://testnet.nearblocks.io/txns/AGYKzy8Uhi8mHDhdcZUvKeWegrTxQsjysq2BnwQYHkpw"
+    },
+    {
+      "step": "arbiter confirms the title arrived (checked on Sepolia)",
+      "url": "https://testnet.nearblocks.io/txns/CUtzCC7ywFWbocWMrCWbC13PE4YbUMHQYqfYniipCggG"
+    }
+  ],
+  "at": "2026-11-07T00:06:13.765Z"
+}

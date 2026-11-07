@@ -32,11 +32,11 @@ Prerequisites: Node 24 + pnpm 11, Rust with the `wasm32-unknown-unknown` target,
 
 1. `pnpm install` → workspace installs.
 2. `pnpm typecheck` → `shared`, `evm`, `scripts`, `web` typecheck clean.
-3. `pnpm test` → web 12, scripts 8, evm 5 (TradeTrust 5.5.2 bytecode on anvil), shared 4 (+4 live-network tests skipped unless `RUN_NETWORK_TESTS=1`).
+3. `pnpm test` → web 14, scripts 8, evm 5 (TradeTrust 5.5.2 bytecode on anvil), shared 4 (+4 live-network tests skipped unless `RUN_NETWORK_TESTS=1`).
 4. `pnpm contracts:build` → builds the NEAR Intents Verifier from source (`near/intents` @ `defuse/v0.4.5`), `tradelock`, the T1 proof contract and the test-only MockSigner, and prints their sha256. With the same toolchain, `tradelock.wasm` = `e747afe8…` and `defuse.wasm` = `c2830801…`, the code deployed on testnet (another rustc version may give different bytes).
 5. `pnpm contracts:test` → 116 Rust tests: `tradelock` 82 unit + 3 sandbox E2E, T1 proof 24 + 1 sandbox, `tradelock-evm` 4, Verifier check 2. Sandbox tests run the real nearcore runtime and the real Verifier code.
 6. `cp web/.env.example web/.env.local && pnpm --filter @tradelock/web build && pnpm --filter @tradelock/web start` → app on http://localhost:3000, reading the deployed testnet contracts.
-7. In a second terminal: `pnpm --filter @tradelock/web exec playwright install chromium && pnpm --filter @tradelock/web e2e:deployed` → 104 checks pass: `/deals/0`, `/deals/1`, `/deals/2` and `/demo` render the on-chain end state with live Sepolia title reads, no wallet needed.
+7. In a second terminal: `pnpm --filter @tradelock/web exec playwright install chromium && pnpm --filter @tradelock/web e2e:deployed` → 155 checks pass: `/deals/0`–`/deals/3` and `/demo` render the on-chain end state with live Sepolia title reads, no wallet needed.
 8. Check title on Sepolia yourself (see [Verify title yourself](#verify-title-yourself)).
 
 ### Tier B — run your own deal
@@ -48,6 +48,7 @@ pnpm demo settle            # dry run: prints the exact next command and stops
 pnpm demo settle --yes      # eBL: create → accept → fund → mint eBL → hand over → confirm held → accept documents → MPC-signed title transfer → Settled
 pnpm demo refund --yes      # eBL: … → refuse documents → cash back + title back to the supplier → Refunded
 pnpm demo escrow --yes      # escrow-only: … → confirm delivery → ft_withdraw payout to the supplier → Settled
+pnpm demo dispute --yes     # eBL: buyer disputes → votes Refund/Release/Release → 2-of-3 Release → supplier + arbiter confirm receipt → Settled
 pnpm demo settle --deal 5 --step   # one step at a time; resumes any deal from its on-chain state
 ```
 
@@ -72,6 +73,7 @@ Completed deals (all steps and transactions: [`docs/DEPLOYMENTS.md`](docs/DEPLOY
 | 0 | documents accepted → **Settled** | [accept documents](https://testnet.nearblocks.io/txns/5FxqswApG284GyQusQUGxC1gxwrUez2b5XV7apBBDWo4) · [MPC signature](https://testnet.nearblocks.io/txns/DZFWBvA2zQAfdZUZXKGMjPSdbQGAUMfGR67nVUcBi9LR) · [title transfer](https://sepolia.etherscan.io/tx/0x5ad29edf7e351452e394a8cba8e3f67f03f3fe445650ff0fda8ef9804f58fb09) | [TitleEscrow `0x1514…DA76`](https://sepolia.etherscan.io/address/0x15149d3f55801f7A112A595520De234d8821DA76): holder = beneficiary = buyer |
 | 1 | documents refused → **Refunded** | [refuse documents](https://testnet.nearblocks.io/txns/4w36bUB9r3aHCGbcoQtjduF9kFb9CLhEaUUr5yxCVGAN) · [MPC signature](https://testnet.nearblocks.io/txns/61yL8sYqfipbqbt5KHjSNAQS4gLs8pX4WRqer9QEuS6D) · [title back](https://sepolia.etherscan.io/tx/0x870a0ace8e1885a14624cab022a3f317efeec9a67e92e2693917875cc8631b01) | [TitleEscrow `0x5a97…AfaF6`](https://sepolia.etherscan.io/address/0x5a97ED6d6d43A8D1a45BA6680EA2A596dc7AfaF6): holder = beneficiary = supplier |
 | 2 | escrow-only → **Settled** | [confirm delivery + `ft_withdraw` payout](https://testnet.nearblocks.io/txns/q9u62g7y2A4ea5bicD2mmxTfmtT9kfJxdJaC6xWrFsi) | — (no bill of lading) |
+| 3 | buyer disputes → votes Refund / Release / Release → **Settled** 2-of-3 | [buyer Refund](https://testnet.nearblocks.io/txns/E4t2vFYyucMA4iUNTGGzZb1gQ6bZphm6yXcryMmRQoas) · [supplier Release](https://testnet.nearblocks.io/txns/CXQTjEZwhVg3wmyDZSC2v4BgAVHfGkaVDXDArqHwZFYt) · [arbiter Release](https://testnet.nearblocks.io/txns/Gsk6o7KCVR1WbKa5CEhtVHggMPFgU6pxYBK95zKR6uvc) · [title transfer](https://sepolia.etherscan.io/tx/0x412a20399ace6763ff4007dadc5baddf548b81796fcea0e418a1efcf97f99b3d) · receipt confirmed by [supplier](https://testnet.nearblocks.io/txns/AGYKzy8Uhi8mHDhdcZUvKeWegrTxQsjysq2BnwQYHkpw) + [arbiter](https://testnet.nearblocks.io/txns/CUtzCC7ywFWbocWMrCWbC13PE4YbUMHQYqfYniipCggG) | [TitleEscrow `0x30cf…3a50`](https://sepolia.etherscan.io/address/0x30cf1781729f03e90eA90EC63D276f8D230A3a50): holder = beneficiary = buyer |
 
 ### Title-leg proof (T1)
 

@@ -135,6 +135,27 @@ Proof contract `contracts/tradelock-proof` ran on `tradelock.samuelowen.testnet`
 | `confirm_delivery` → `ft_withdraw` payout → `Settled` | [`q9u62g7…`](https://testnet.nearblocks.io/txns/q9u62g7y2A4ea5bicD2mmxTfmtT9kfJxdJaC6xWrFsi) | Verifier `ft_withdraw` returned the full amount; cash leg `Done` |
 | End state (checked 2026-11-07) | | supplier `ft_balance_of` = 1000000 (outside the Verifier); Verifier tUSD: buyer 0, supplier 1000000 (deal 0), tradelock 0; Verifier's own tUSD = 1000000 (backs supplier's internal balance) |
 
+## Demo run — Disputed deal, settled 2-of-3 (reference run, 2026-11-07)
+
+`pnpm demo dispute --yes`. Record: `docs/demo-runs/dispute-deal-3.json`. Deal page: `/deals/3`. Scenario: after `TitleHeld` the buyer disputes ("documents don't match order", hash `a12fd5fb…5980` only); votes buyer Refund, supplier Release, arbiter Release → 2-of-3 Release; the buyer does not confirm receipt, so supplier + arbiter confirm (D-019 two-party path).
+
+| Step | NEAR tx | Sepolia tx | Notes |
+|---|---|---|---|
+| Deal id / deal address | | [`0xf4acb96D97D92b1eF42Ec02F3D4Ed2f4FfA09ee1`](https://sepolia.etherscan.io/address/0xf4acb96D97D92b1eF42Ec02F3D4Ed2f4FfA09ee1) | `3`; address precomputed before the run |
+| TitleEscrow | | [`0x30cf1781729f03e90eA90EC63D276f8D230A3a50`](https://sepolia.etherscan.io/address/0x30cf1781729f03e90eA90EC63D276f8D230A3a50) | eBL token `29070066098367625448759700635252040184152480278591853303108457477680352471206` |
+| `create_deal` · `accept_deal` | [`2YpMDah…`](https://testnet.nearblocks.io/txns/2YpMDahrZhGGd1V9rb2fY7Pv9wFsSv7xyZM1tKHBavHS) · [`BzQ4RmG…`](https://testnet.nearblocks.io/txns/BzQ4RmGA2VL1bm3atiecRK6NM9QGVM3PXasRFrz9Mpds) | | |
+| top-up · Verifier deposit · funding | [`7Z51zRM…`](https://testnet.nearblocks.io/txns/7Z51zRMu5Qqf9tNbgZfQG6KJhvEdUroWnM54s5GMC7D9) · [`64DBhYL…`](https://testnet.nearblocks.io/txns/64DBhYLzXawEYNwCshACmgBcDXdexn4nceVhNeJtGCPx) · [`iG8RnGo…`](https://testnet.nearblocks.io/txns/iG8RnGo8DK2viG8LwRwTsNrZaSpk1msnPX3obnSTwbU) | | → `Funded` |
+| Mint · hand-over | | [`0x897a2bb7…`](https://sepolia.etherscan.io/tx/0x897a2bb76eba95b9e4ec2f526bcd14dcc6d715be882d914cfa1dd57c661de96f) · [`0x3512f3cc…`](https://sepolia.etherscan.io/tx/0x3512f3cc884ec1195d0ee4a32cdfed8bbc1963dadb3203036e22f3d31f78973e) | |
+| `confirm_title_held` | [`nHekFfB…`](https://testnet.nearblocks.io/txns/nHekFfB2UPpW1LyZRDPFpoGrn5gYW7w3YkanpsykX8A) | | buyer, block 12079988 → `TitleHeld` |
+| `dispute` (buyer) | [`26u9Ec1…`](https://testnet.nearblocks.io/txns/26u9Ec1C5myXKLAhyuishpDwXBobMVhb82ZagfAkkQcQ) | | → `Disputed` |
+| `vote` buyer Refund · supplier Release · arbiter Release | [`E4t2vFY…`](https://testnet.nearblocks.io/txns/E4t2vFYyucMA4iUNTGGzZb1gQ6bZphm6yXcryMmRQoas) · [`CXQTjEZ…`](https://testnet.nearblocks.io/txns/CXQTjEZwhVg3wmyDZSC2v4BgAVHfGkaVDXDArqHwZFYt) · [`Gsk6o7K…`](https://testnet.nearblocks.io/txns/Gsk6o7KCVR1WbKa5CEhtVHggMPFgU6pxYBK95zKR6uvc) | | third vote reaches 2-of-3 Release → `Settling`; cash payout to supplier |
+| Deal address gas top-up | | [`0x6365b3ed…`](https://sepolia.etherscan.io/tx/0x6365b3edf2c840669f1d644e59f5537fe44d43c1d231e8091055f040b4479f70) | |
+| MPC signature request | [`7P2nH2s…`](https://testnet.nearblocks.io/txns/7P2nH2smZP3Pz7Az2ghBwWaLtqfD3kha8nGys1Yacp26) | | |
+| Title transfer to buyer (MPC-signed) | | [`0x412a2039…`](https://sepolia.etherscan.io/tx/0x412a20399ace6763ff4007dadc5baddf548b81796fcea0e418a1efcf97f99b3d) | from `0xf4ac…9ee1`, nonce 0 |
+| `report_broadcast` | [`2Be8ni5…`](https://testnet.nearblocks.io/txns/2Be8ni5zipt2rpV7fkFQs5rx7i8tXVyqeU8mBM7ttcnW) | | |
+| `confirm_title_transferred` supplier → arbiter | [`AGYKzy8…`](https://testnet.nearblocks.io/txns/AGYKzy8Uhi8mHDhdcZUvKeWegrTxQsjysq2BnwQYHkpw) · [`CUtzCC7…`](https://testnet.nearblocks.io/txns/CUtzCC7ywFWbocWMrCWbC13PE4YbUMHQYqfYniipCggG) | | supplier's recorded (`accepted: false`), arbiter's completes the two-party rule → `Settled` |
+| End state (checked 2026-11-07) | | | holder = beneficiary = buyer, prevHolder = deal address; votes Refund/Release/Release; Verifier tUSD: supplier 2000000, buyer 0, tradelock 0 |
+
 ## Redeploy log
 
 | Date | Component | Reason | Old → New |
