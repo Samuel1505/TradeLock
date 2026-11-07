@@ -61,9 +61,13 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 class DryRunStop extends Error {}
 class StepDone extends Error {}
 
-/** Every state change goes through here: print the exact action; send only with --yes, or once with --step. */
-async function gate(description: string, command?: string): Promise<void> {
-  if (STEP && stepUsed) throw new StepDone();
+/**
+ * Every state change goes through here: print the exact action; send only with --yes, or once with --step.
+ * `companion`: belongs to the step already running (gas top-up → signature request, broadcast → report_broadcast),
+ * so --step sends it in the same step instead of stopping halfway.
+ */
+async function gate(description: string, command?: string, companion = false): Promise<void> {
+  if (STEP && stepUsed && !companion) throw new StepDone();
   console.log(`\n▶ ${description}`);
   if (command) console.log(`  ${command}`);
   if (STEP) {
@@ -73,9 +77,9 @@ async function gate(description: string, command?: string): Promise<void> {
   if (!YES) throw new DryRunStop();
 }
 
-async function nearCall(step: string, spec: Omit<CallSpec, 'network'>): Promise<unknown> {
+async function nearCall(step: string, spec: Omit<CallSpec, 'network'>, companion = false): Promise<unknown> {
   const full: CallSpec = { ...spec, network: env.NEAR_NETWORK };
-  await gate(step, commandLine(full));
+  await gate(step, commandLine(full), companion);
   const r = await callNear(full);
   links.push({ step, url: nearTx(r.txId) });
   console.log(`  ✓ ${nearTx(r.txId)}`);
@@ -234,7 +238,7 @@ async function execute(step: Step, deal: DealView): Promise<void> {
         signer: env.DEMO_EXECUTOR, contract: C, method: 'request_title_signature',
         args: { deal_id: id, nonce: String(p.nonce), max_fee_per_gas: p.maxFeePerGas.toString(), max_priority_fee_per_gas: p.maxPriorityFeePerGas.toString(), gas_limit: p.gasLimit.toString() },
         gasTgas: 100, deposit: `${cfg.mpc_sign_deposit} yoctoNEAR`,
-      });
+      }, bal < p.worstCase);
       return;
     }
     case 'broadcast': {
@@ -246,7 +250,7 @@ async function execute(step: Step, deal: DealView): Promise<void> {
       await waitForSuccess(pub, hash, 2);
       links.push({ step: `title transfer (${how})`, url: etherscanTx(hash) });
       console.log(`  ✓ ${etherscanTx(hash)}`);
-      await nearCall('report_broadcast (informational)', { signer: env.DEMO_EXECUTOR, contract: C, method: 'report_broadcast', args: { deal_id: id, tx_hash: hash }, gasTgas: 30, deposit: '0 NEAR' });
+      await nearCall('report_broadcast (informational)', { signer: env.DEMO_EXECUTOR, contract: C, method: 'report_broadcast', args: { deal_id: id, tx_hash: hash }, gasTgas: 30, deposit: '0 NEAR' }, true);
       return;
     }
     case 'dispute': {
