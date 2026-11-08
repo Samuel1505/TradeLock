@@ -7,3 +7,4 @@ export * from './env.js';
 export * from './evm.js';
 export * from './envfile.js';
 export * from './ft.js';
+export * from './redact.js';
