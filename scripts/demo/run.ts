@@ -4,6 +4,8 @@
  *   pnpm demo settle [--deal N] [--yes]     eBL: documents accepted → Settled
  *   pnpm demo refund [--deal N] [--yes]     eBL: documents refused → Refunded
  *   pnpm demo escrow [--deal N] [--yes]     escrow-only: delivery confirmed, ft_withdraw payout → Settled
+ *   pnpm demo prep [--yes]                  buyer prep without a deal: tUSD top-up + deposit into the Verifier, until
+ *                                           the buyer's Verifier balance covers one deal (then funding follows accept)
  *   pnpm demo dispute [--deal N] [--yes]    eBL: buyer disputes ("documents don't match order"); votes buyer Refund,
  *                                           supplier Release, arbiter Release → 2-of-3 Release; supplier + arbiter
  *                                           confirm title receipt (D-019) → Settled
@@ -18,21 +20,23 @@ import { fileURLToPath } from 'node:url';
 import { getAddress, keccak256, parseEther, toHex, type Address, type PublicClient } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import {
-  NonRetryableError, assertFtRegistered, etherscanAddress, etherscanTx, nearRpcUrls, nearTx, nearView, requireEnv,
+  NonRetryableError, assertFtRegistered, installRedaction, etherscanAddress, etherscanTx, nearRpcUrls, nearTx, nearView, requireEnv,
   sepoliaPublicClient, sepoliaRpcUrls, sepoliaWalletClient, waitForSuccess,
 } from '@tradelock/shared';
 import { assembleSignedTitleTx, broadcastIdempotent, ensureGas, mintEbl, prepareTitleTx, readTitle, transferTitle, type ContractSigView, type ContractTxView } from '@tradelock/evm';
 import { callNear, commandLine, type CallSpec } from './near-cli.js';
 import { nextStep, type DealView, type Flow, type SepoliaFacts, type Step } from './steps.js';
 
+// Mask any secret before it can reach the terminal or a screen recording.
+installRedaction();
 const env = requireEnv(
   'NEAR_NETWORK', 'TRADELOCK_CONTRACT_ID', 'VERIFIER_ID', 'TOKEN_CONTRACT_ID', 'DEMO_BUYER', 'DEMO_SUPPLIER', 'DEMO_ARBITER',
   'DEMO_EXECUTOR', 'DEMO_AMOUNT', 'SEPOLIA_CARRIER_PK', 'SEPOLIA_SUPPLIER_PK', 'SEPOLIA_BUYER_ADDRESS', 'TRADETRUST_REGISTRY',
 );
 const argv = process.argv.slice(2);
-const flow = argv[0] as Flow;
-if (!['settle', 'refund', 'escrow', 'dispute'].includes(flow)) {
-  console.error('usage: pnpm demo <settle|refund|escrow|dispute> [--deal N] [--yes | --step] [--max-steps N]');
+const flow = argv[0] as Flow | 'prep';
+if (!['settle', 'refund', 'escrow', 'dispute', 'prep'].includes(flow)) {
+  console.error('usage: pnpm demo <settle|refund|escrow|dispute|prep> [--deal N] [--yes | --step] [--max-steps N]');
   process.exit(2);
 }
 const flag = (name: string) => {
@@ -152,24 +156,44 @@ async function createDeal(): Promise<string> {
   return got;
 }
 
-async function fund(deal: DealView): Promise<void> {
+const verifierBalance = async () => BigInt(await nearView<string>(near, env.VERIFIER_ID, 'mt_balance_of', { account_id: env.DEMO_BUYER, token_id: TOKEN_ID }));
+
+/**
+ * One buyer-prep action if the buyer's Verifier balance is short: tUSD top-up (token owner → buyer), else the
+ * buyer's deposit into its own Verifier balance. Returns 'ready' when the balance already covers one deal.
+ */
+async function prepBuyerOnce(): Promise<'ready' | 'sent'> {
   await assertFtRegistered(near, env.TOKEN_CONTRACT_ID, [env.VERIFIER_ID, env.DEMO_BUYER]);
-  const inVerifier = BigInt(await nearView<string>(near, env.VERIFIER_ID, 'mt_balance_of', { account_id: env.DEMO_BUYER, token_id: TOKEN_ID }));
-  if (inVerifier < BigInt(AMOUNT)) {
-    const ftBal = BigInt(await nearView<string>(near, env.TOKEN_CONTRACT_ID, 'ft_balance_of', { account_id: env.DEMO_BUYER }));
-    if (ftBal < BigInt(AMOUNT)) {
-      await nearCall(`top up buyer with ${AMOUNT} tUSD base units (token owner → buyer)`, {
-        signer: env.DEMO_EXECUTOR, contract: env.TOKEN_CONTRACT_ID, method: 'ft_transfer',
-        args: { receiver_id: env.DEMO_BUYER, amount: AMOUNT, memo: 'tradelock demo top-up (testnet, no value)' }, gasTgas: 30, deposit: '1 yoctoNEAR',
-      });
+  if ((await verifierBalance()) >= BigInt(AMOUNT)) return 'ready';
+  const ftBal = BigInt(await nearView<string>(near, env.TOKEN_CONTRACT_ID, 'ft_balance_of', { account_id: env.DEMO_BUYER }));
+  if (ftBal < BigInt(AMOUNT)) {
+    await nearCall(`top up buyer with ${AMOUNT} tUSD base units (token owner → buyer)`, {
+      signer: env.DEMO_EXECUTOR, contract: env.TOKEN_CONTRACT_ID, method: 'ft_transfer',
+      args: { receiver_id: env.DEMO_BUYER, amount: AMOUNT, memo: 'tradelock demo top-up (testnet, no value)' }, gasTgas: 30, deposit: '1 yoctoNEAR',
+    });
+    return 'sent';
+  }
+  await nearCall('buyer deposits tUSD into its own Verifier balance (ft_transfer_call, msg = "")', {
+    signer: env.DEMO_BUYER, contract: env.TOKEN_CONTRACT_ID, method: 'ft_transfer_call',
+    args: { receiver_id: env.VERIFIER_ID, amount: AMOUNT, msg: '' }, gasTgas: 100, deposit: '1 yoctoNEAR',
+  });
+  return 'sent';
+}
+
+/** `pnpm demo prep`: buyer prep before any deal exists (off camera for the video). */
+async function prep(): Promise<void> {
+  for (let i = 0; i < 4; i++) {
+    if ((await prepBuyerOnce()) === 'ready') {
+      console.log(`\n✓ buyer ${env.DEMO_BUYER} holds ${await verifierBalance()} tUSD base units in the Verifier (≥ ${AMOUNT}). Funding will follow accept_deal directly.`);
       return;
     }
-    await nearCall('buyer deposits tUSD into its own Verifier balance (ft_transfer_call, msg = "")', {
-      signer: env.DEMO_BUYER, contract: env.TOKEN_CONTRACT_ID, method: 'ft_transfer_call',
-      args: { receiver_id: env.VERIFIER_ID, amount: AMOUNT, msg: '' }, gasTgas: 100, deposit: '1 yoctoNEAR',
-    });
-    return;
   }
+  throw new NonRetryableError('buyer prep did not reach the required Verifier balance after 4 actions');
+}
+
+async function fund(deal: DealView): Promise<void> {
+  // Steps 3–4 only if the buyer is short; after `pnpm demo prep` this goes straight to funding.
+  if ((await prepBuyerOnce()) === 'sent') return;
   await nearCall(`buyer funds deal ${deal.id} (Verifier mt_transfer_call → tradelock.mt_on_transfer)`, {
     signer: env.DEMO_BUYER, contract: env.VERIFIER_ID, method: 'mt_transfer_call',
     args: { receiver_id: C, token_id: TOKEN_ID, amount: AMOUNT, msg: JSON.stringify({ deal_id: Number(deal.id) }) }, gasTgas: 300, deposit: '1 yoctoNEAR',
@@ -287,6 +311,7 @@ async function main() {
   console.log(`Tradelock demo — flow ${flow} on ${env.NEAR_NETWORK} (${C}) + Sepolia. ${YES ? 'SENDING (--yes).' : STEP ? 'STEP: sends one step, then stops.' : 'Dry run: prints the next action only.'}`);
   let id = flag('--deal');
   try {
+    if (flow === 'prep') return await prep();
     if (!id) id = await createDeal();
     for (let i = 0; i < MAX_STEPS; i++) {
       const deal = await getDeal(id);
