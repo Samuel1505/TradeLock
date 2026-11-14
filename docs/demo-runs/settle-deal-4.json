@@ -1,0 +1,14 @@
+{
+  "flow": "settle",
+  "contract": "tradelock.samuelowen.testnet",
+  "deal": "4",
+  "state": "Settled",
+  "title_escrow": "0xedc8a5f1c4f5d03c6e98bcc14ebbc9d032677162",
+  "links": [
+    {
+      "step": "buyer confirms the title arrived (checked on Sepolia)",
+      "url": "https://testnet.nearblocks.io/txns/bFg3Y2MYacxfe3CteWbsTRAbnkGhyGdptjLKCMWLyUd"
+    }
+  ],
+  "at": "2026-11-14T10:38:20.033Z"
+}
