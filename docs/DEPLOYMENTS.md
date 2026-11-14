@@ -156,6 +156,26 @@ Proof contract `contracts/tradelock-proof` ran on `tradelock.samuelowen.testnet`
 | `confirm_title_transferred` supplier → arbiter | [`AGYKzy8…`](https://testnet.nearblocks.io/txns/AGYKzy8Uhi8mHDhdcZUvKeWegrTxQsjysq2BnwQYHkpw) · [`CUtzCC7…`](https://testnet.nearblocks.io/txns/CUtzCC7ywFWbocWMrCWbC13PE4YbUMHQYqfYniipCggG) | | supplier's recorded (`accepted: false`), arbiter's completes the two-party rule → `Settled` |
 | End state (checked 2026-11-07) | | | holder = beneficiary = buyer, prevHolder = deal address; votes Refund/Release/Release; Verifier tUSD: supplier 2000000, buyer 0, tradelock 0 |
 
+## Demo run — Settled deal for the video (2026-11-14)
+
+`pnpm demo prep --yes`, then `pnpm demo settle --step` one step at a time, with a screenshot of `/deals/4` taken after each step for the video. Record: `docs/demo-runs/settle-deal-4.json` (holds the last step only). Sepolia hashes for mint and hand-over were read from the TitleEscrow's logs.
+
+| Step | NEAR tx | Sepolia tx | Notes |
+|---|---|---|---|
+| Deal id / deal address | | [`0xdEFA693B1Ef2Db6517F3181e305Ce67F42ec96eB`](https://sepolia.etherscan.io/address/0xdEFA693B1Ef2Db6517F3181e305Ce67F42ec96eB) | `4` (eBL, 1.000000 tUSD, payout Internal → supplier); path `tradelock/deal/4` |
+| TitleEscrow | | [`0xEDc8a5F1C4f5D03c6e98BcC14EBbC9D032677162`](https://sepolia.etherscan.io/address/0xEDc8a5F1C4f5D03c6e98BcC14EBbC9D032677162) | eBL token `90674131651972596680356225214560272379818136913102089950851978333539127899653` (synthetic) |
+| `create_deal` | [`BbuRatY…`](https://testnet.nearblocks.io/txns/BbuRatyXBEvUVbVGNFnULCGWTvMkRoSFoVJNwerVFo6w) | | buyer |
+| `accept_deal` | [`CiszXL5…`](https://testnet.nearblocks.io/txns/CiszXL5VFveo6YLxYbQzxtV6ob39CifLdi8XQZvjKdGy) | | supplier |
+| Funding (`mt_transfer_call`) | [`HMnS3tg…`](https://testnet.nearblocks.io/txns/HMnS3tgGpEcPUzaEazeiNwazHpSX5hvBzd5FmG5Qucmh) | | → `Funded` |
+| Mint · hand-over to deal address | | [`0xa3812640…`](https://sepolia.etherscan.io/tx/0xa38126402216d0fc05457c32de739363af77ff92a5819c9277ab49a527e50cdb) · [`0x3699b65b…`](https://sepolia.etherscan.io/tx/0x3699b65bbdb4ed3474821ed37b9b0a6ccac7825e063dff9f641838c908f0950e) | carrier mint; supplier `transferOwners(deal, deal)` |
+| `confirm_title_held` | [`4Fv4dYY…`](https://testnet.nearblocks.io/txns/4Fv4dYYZocBAQehDcqXPp77xMXJQghBGf2rYcKyoBHRk) | | buyer → `TitleHeld` |
+| `accept_documents` | [`FUpQ8zv…`](https://testnet.nearblocks.io/txns/FUpQ8zvLoskMtWjTXqcK6QZsojbUDwmSDFc7Lng1BAwf) | | → `Settling`; cash leg `Done` |
+| MPC signature request | [`GbYq7WG…`](https://testnet.nearblocks.io/txns/GbYq7WGgiRsFCQ5H8eF4tMaUmGYLgLeP74abhgY2cpgM) | | after carrier gas top-up of the deal address |
+| Title transfer to buyer (MPC-signed) | | [`0x43178ee2…`](https://sepolia.etherscan.io/tx/0x43178ee2a2fbb05d5d78e8820850657bebeabd6011ba4ed67a08c0b5d8ecf796) | from `0xdEFA…96eB`, nonce 0 |
+| `report_broadcast` | [`79wsTPM…`](https://testnet.nearblocks.io/txns/79wsTPMVEXnEnPrmNY7NvPmUnLB1Rr87A9i5uimqCMJv) | | |
+| `confirm_title_transferred` / `Settled` | [`bFg3Y2M…`](https://testnet.nearblocks.io/txns/bFg3Y2MYacxfe3CteWbsTRAbnkGhyGdptjLKCMWLyUd) | | buyer → `Settled` |
+| End state (checked 2026-11-14) | | | holder = beneficiary = buyer `0x6a7d…46ed` |
+
 ## Redeploy log
 
 | Date | Component | Reason | Old → New |
